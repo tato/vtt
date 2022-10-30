@@ -109,6 +109,15 @@ pub fn init(gpa: std.mem.Allocator) Ui {
     };
 }
 
+pub fn deinit(ui: *Ui, allocator: std.mem.Allocator) void {
+    std.debug.assert(allocator.ptr == ui.gpa.ptr);
+    ui.gpa.destroy(ui.primordial_parent);
+    var i = ui.blocks.valueIterator();
+    while (i.next()) |block| ui.gpa.destroy(block.*);
+    ui.blocks.deinit(ui.gpa);
+    ui.* = undefined;
+}
+
 pub fn begin(ui: *Ui) void {
     ui.arena = std.heap.ArenaAllocator.init(ui.gpa);
     ui.frame_index += 1;
@@ -150,6 +159,7 @@ pub fn pop_parent(ui: *Ui) void {
     ui.current_parent = ui.current_parent.parent.?;
 }
 
+// TODO: right now we take the string pointer and don't dupe. this is risky.
 pub fn label(ui: *Ui, string: [:0]const u8) void {
     const block = ui.get_or_insert_block(key_from_string(string));
 
@@ -158,6 +168,7 @@ pub fn label(ui: *Ui, string: [:0]const u8) void {
     block.semantic_size[@enumToInt(Axis.y)].kind = .text_content;
 }
 
+// TODO: right now we take the string pointer and don't dupe. this is risky.
 pub fn button(ui: *Ui, string: [:0]const u8) bool {
     const block = ui.get_or_insert_block(key_from_string(string));
 

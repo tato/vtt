@@ -6,6 +6,7 @@ pub fn main(
     comptime State: type,
     comptime init_function: fn (std.mem.Allocator, *State) void,
     comptime update_function: fn (*State, *Ui) void,
+    comptime cleanup_function: fn (std.mem.Allocator, *State) void,
 ) fn () void {
     return struct {
         fn _main() void {
@@ -18,8 +19,10 @@ pub fn main(
 
             var state = @as(State, undefined);
             init_function(gpa.allocator(), &state);
+            defer cleanup_function(gpa.allocator(), &state);
 
             var ui = Ui.init(gpa.allocator());
+            defer ui.deinit(gpa.allocator());
             ui.font = rl.LoadFont("c:/windows/fonts/arial.ttf");
 
             while (!rl.WindowShouldClose()) {

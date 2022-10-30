@@ -2,7 +2,7 @@ const std = @import("std");
 const toml = @import("toml");
 const platform = @import("platform.zig");
 
-pub const main = platform.main(World, init, update);
+pub const main = platform.main(World, init, update, cleanup);
 
 fn init(allocator: std.mem.Allocator, world: *World) void {
     const file = get_sample_world_file(allocator) catch |e| {
@@ -36,6 +36,10 @@ fn update(world: *World, ui: *platform.Ui) void {
     }
 }
 
+fn cleanup(allocator: std.mem.Allocator, world: *World) void {
+    world.deinit(allocator);
+}
+
 const World = struct {
     tokens: std.ArrayList(Token),
     dragging: u32 = not_dragging,
@@ -52,7 +56,8 @@ const World = struct {
         };
     }
 
-    fn deinit(world: *World) void {
+    fn deinit(world: *World, allocator: std.mem.Allocator) void {
+        for (world.tokens.items) |*token| token.deinit(allocator);
         world.tokens.deinit();
         world.* = undefined;
     }
@@ -70,7 +75,7 @@ const Token = struct {
         };
     }
 
-    fn deinit(allocator: std.mem.Allocator, token: *Token) void {
+    fn deinit(token: *Token, allocator: std.mem.Allocator) void {
         allocator.free(token.name);
         allocator.free(token.details);
         token.* = undefined;
