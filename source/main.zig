@@ -9,31 +9,79 @@ fn init(allocator: std.mem.Allocator, world: *World) void {
         std.debug.print("{any}\n", .{@errorReturnTrace()});
         std.debug.panic("({!}) Sample project file could not be read.", .{e});
     };
+    defer toml_free(WorldFile, allocator, file);
 
-    world.* = .{
-        .file = file,
-    };
+    world.* = World.from_file(allocator, file) catch @panic("Out of memory.");
 }
 
 fn update(world: *World, ui: *platform.Ui) void {
-    var x = @as(f32, 200);
-    for (world.file.tokens) |token| {
-        ui.push_parent(ui.layout_positioned(x, 300));
+    if (world.dragging != World.not_dragging) {
+        const rl = @import("raylib"); // 🤫
+        const dragging = &world.tokens.items[world.dragging];
+        dragging.left += rl.GetMouseDelta().x;
+        dragging.top += rl.GetMouseDelta().y;
+
+        if (rl.IsMouseButtonUp(rl.MOUSE_BUTTON_LEFT)) {
+            world.dragging = World.not_dragging;
+        }
+    }
+
+    for (world.tokens.items) |token, token_idx| {
+        ui.push_parent(ui.layout_positioned(token.left, token.top));
         defer ui.pop_parent();
-        ui.label(token.name);
-        x += 200;
+
+        if (ui.button(token.name)) {
+            world.dragging = @intCast(u32, token_idx);
+        }
     }
 }
 
 const World = struct {
-    file: WorldFile,
+    tokens: std.ArrayList(Token),
+    dragging: u32 = not_dragging,
+
+    const not_dragging = std.math.maxInt(u32);
+
+    fn from_file(allocator: std.mem.Allocator, file: WorldFile) !World {
+        var tokens = try std.ArrayList(Token).initCapacity(allocator, file.tokens.len);
+        for (file.tokens) |token| {
+            tokens.appendAssumeCapacity(try Token.from_file(allocator, token));
+        }
+        return World{
+            .tokens = tokens,
+        };
+    }
+
+    fn deinit(world: *World) void {
+        world.tokens.deinit();
+        world.* = undefined;
+    }
+};
+const Token = struct {
+    name: [:0]const u8,
+    details: [:0]const u8,
+    left: f32 = 0,
+    top: f32 = 0,
+
+    fn from_file(allocator: std.mem.Allocator, file: TokenFile) !Token {
+        return Token{
+            .name = try allocator.dupeZ(u8, file.name),
+            .details = try allocator.dupeZ(u8, file.details),
+        };
+    }
+
+    fn deinit(allocator: std.mem.Allocator, token: *Token) void {
+        allocator.free(token.name);
+        allocator.free(token.details);
+        token.* = undefined;
+    }
 };
 const WorldFile = struct {
     tokens: []const TokenFile,
 };
 const TokenFile = struct {
-    name: [:0]const u8,
-    details: [:0]const u8,
+    name: []const u8,
+    details: []const u8,
 };
 
 fn get_sample_world_file(allocator: std.mem.Allocator) !WorldFile {
