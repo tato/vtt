@@ -34,6 +34,7 @@ const Block = struct {
     string: ?[:0]const u8,
     semantic_size: [Axis.len]Size,
     layout_axis: Axis = .x,
+    background_color: u32 = 0x00_00_00_00,
 
     // computed every frame
     computed_rel_position: [Axis.len]f32,
@@ -50,6 +51,7 @@ const Block = struct {
         block.semantic_size[0] = .{ .kind = .text_content, .value = 0, .strictness = 0 };
         block.semantic_size[1] = .{ .kind = .text_content, .value = 0, .strictness = 0 };
         block.layout_axis = .x;
+        block.background_color = 0x00_00_00_00;
 
         block.first = null;
         block.last = null;
@@ -140,7 +142,7 @@ pub fn end(ui: *Ui) void {
     compute_relative_positions(ui.primordial_parent);
 
     rl.BeginDrawing();
-    rl.ClearBackground(rl.RAYWHITE);
+    rl.ClearBackground(rl.Color.init(0xf3, 0xf3, 0xf3, 0xff));
 
     ui.render_tree(ui.primordial_parent);
 
@@ -175,6 +177,7 @@ pub fn button(ui: *Ui, string: [:0]const u8) bool {
     block.string = string;
     block.semantic_size[@enumToInt(Axis.x)] = Size.init(.text_content, 1, 1);
     block.semantic_size[@enumToInt(Axis.y)] = Size.init(.text_content, 1, 1);
+    block.background_color = 0xfa_fa_fa_ff;
     block.flags.border = true;
 
     const mouse_position = rl.GetMousePosition();
@@ -405,21 +408,37 @@ fn render_tree(ui: *Ui, block: *Block) void {
     std.debug.assert(block.rect.width >= 0);
     std.debug.assert(block.rect.height >= 0);
 
+    ui.render_one_block(block);
+
+    if (block.first) |first| ui.render_tree(first);
+    if (block.next) |next| ui.render_tree(next);
+}
+
+fn render_one_block(ui: *Ui, block: *Block) void {
+    rl.BeginScissorModeRec(block.rect);
+    defer rl.EndScissorMode();
+
+    const background_color = rl.Color.init(
+        @truncate(u8, block.background_color >> 24),
+        @truncate(u8, block.background_color >> 16),
+        @truncate(u8, block.background_color >> 8),
+        @truncate(u8, block.background_color),
+    );
+    rl.DrawRectangleRec(block.rect, background_color);
+
     if (block.string) |string| {
         const position = rl.Vector2.init(block.rect.x, block.rect.y);
         rl.DrawTextEx(ui.font, string, position, @intToFloat(f32, ui.font.baseSize), 0, rl.BLACK);
     }
 
     if (block.flags.border) {
-        rl.DrawLineStrip(&.{
-            rl.Vector2.init(block.rect.x, block.rect.y),
-            rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y),
-            rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y + block.rect.height),
-            rl.Vector2.init(block.rect.x, block.rect.y + block.rect.height),
-            rl.Vector2.init(block.rect.x, block.rect.y),
-        }, rl.BLACK);
+        // rl.DrawLineStrip(&.{
+        //     rl.Vector2.init(block.rect.x, block.rect.y),
+        //     rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y),
+        //     rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y + block.rect.height),
+        //     rl.Vector2.init(block.rect.x, block.rect.y + block.rect.height),
+        //     rl.Vector2.init(block.rect.x, block.rect.y),
+        // }, rl.Color.init(0xec, 0xec, 0xec, 0xff));
+        rl.DrawRectangleLinesEx(block.rect, 2, rl.Color.init(0xec, 0xec, 0xec, 0xff));
     }
-
-    if (block.first) |first| ui.render_tree(first);
-    if (block.next) |next| ui.render_tree(next);
 }
