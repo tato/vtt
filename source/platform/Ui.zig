@@ -432,13 +432,56 @@ fn render_one_block(ui: *Ui, block: *Block) void {
     }
 
     if (block.flags.border) {
-        // rl.DrawLineStrip(&.{
-        //     rl.Vector2.init(block.rect.x, block.rect.y),
-        //     rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y),
-        //     rl.Vector2.init(block.rect.x + block.rect.width, block.rect.y + block.rect.height),
-        //     rl.Vector2.init(block.rect.x, block.rect.y + block.rect.height),
-        //     rl.Vector2.init(block.rect.x, block.rect.y),
-        // }, rl.Color.init(0xec, 0xec, 0xec, 0xff));
         rl.DrawRectangleLinesEx(block.rect, 2, rl.Color.init(0xec, 0xec, 0xec, 0xff));
+        // draw_rounded_rect(block.rect, 2, 8, rl.BLACK);
     }
+}
+
+fn draw_rounded_rect(rect: rl.Rectangle, thick: f32, radius: f32, color: rl.Color) void {
+    _ = thick;
+
+    const steps = 16;
+    const angle_step = std.math.pi / 2.0 / @as(comptime_float, steps);
+    const required_capacity = (steps + 1) * 4 + 5;
+    var points = std.BoundedArray(rl.Vector2, required_capacity){};
+
+    var i = @as(usize, 0);
+    while (i <= steps) : (i += 1) {
+        const x0 = rect.x + radius;
+        const y0 = rect.y + radius;
+        const ang = angle_step * @intToFloat(f32, i);
+        const x = x0 + radius * @cos(ang + std.math.pi);
+        const y = y0 + radius * @sin(ang + std.math.pi);
+        points.appendAssumeCapacity(rl.Vector2.init(x, y));
+    }
+    i = 0;
+    while (i <= steps) : (i += 1) {
+        const x0 = rect.x + rect.width - radius;
+        const y0 = rect.y + radius;
+        const ang = angle_step * @intToFloat(f32, i);
+        const x = x0 + radius * @cos(ang - std.math.pi / 2.0);
+        const y = y0 + radius * @sin(ang - std.math.pi / 2.0);
+        points.appendAssumeCapacity(rl.Vector2.init(x, y));
+    }
+    i = 0;
+    while (i <= steps) : (i += 1) {
+        const x0 = rect.x + rect.width - radius;
+        const y0 = rect.y + rect.height - radius;
+        const ang = angle_step * @intToFloat(f32, i);
+        const x = x0 + radius * @cos(ang);
+        const y = y0 + radius * @sin(ang);
+        points.appendAssumeCapacity(rl.Vector2.init(x, y));
+    }
+    i = 0;
+    while (i <= steps) : (i += 1) {
+        const x0 = rect.x + radius;
+        const y0 = rect.y + rect.height - radius;
+        const ang = angle_step * @intToFloat(f32, i);
+        const x = x0 + radius * @cos(ang + std.math.pi / 2.0);
+        const y = y0 + radius * @sin(ang + std.math.pi / 2.0);
+        points.appendAssumeCapacity(rl.Vector2.init(x, y));
+    }
+    points.appendAssumeCapacity(rl.Vector2.init(rect.x, rect.y + radius));
+
+    rl.DrawLineStrip(points.slice(), color);
 }
