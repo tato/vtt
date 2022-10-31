@@ -416,7 +416,6 @@ fn render_tree(ui: *Ui, block: *Block) void {
 
 fn render_one_block(ui: *Ui, block: *Block) void {
     rl.BeginScissorModeRec(block.rect);
-    defer rl.EndScissorMode();
 
     const background_color = rl.Color.init(
         @truncate(u8, block.background_color >> 24),
@@ -431,57 +430,12 @@ fn render_one_block(ui: *Ui, block: *Block) void {
         rl.DrawTextEx(ui.font, string, position, @intToFloat(f32, ui.font.baseSize), 0, rl.BLACK);
     }
 
+    rl.EndScissorMode();
+
     if (block.flags.border) {
-        rl.DrawRectangleLinesEx(block.rect, 2, rl.Color.init(0xec, 0xec, 0xec, 0xff));
-        // draw_rounded_rect(block.rect, 2, 8, rl.BLACK);
+        const border_color = rl.Color.init(0xec, 0xec, 0xec, 0xff);
+        const radius = 4.0;
+        const roundness = 2.0 * radius / @min(block.rect.width, block.rect.height);
+        rl.DrawRectangleRoundedLines(block.rect, roundness, 8, 2, border_color);
     }
-}
-
-fn draw_rounded_rect(rect: rl.Rectangle, thick: f32, radius: f32, color: rl.Color) void {
-    _ = thick;
-
-    const steps = 16;
-    const angle_step = std.math.pi / 2.0 / @as(comptime_float, steps);
-    const required_capacity = (steps + 1) * 4 + 5;
-    var points = std.BoundedArray(rl.Vector2, required_capacity){};
-
-    var i = @as(usize, 0);
-    while (i <= steps) : (i += 1) {
-        const x0 = rect.x + radius;
-        const y0 = rect.y + radius;
-        const ang = angle_step * @intToFloat(f32, i);
-        const x = x0 + radius * @cos(ang + std.math.pi);
-        const y = y0 + radius * @sin(ang + std.math.pi);
-        points.appendAssumeCapacity(rl.Vector2.init(x, y));
-    }
-    i = 0;
-    while (i <= steps) : (i += 1) {
-        const x0 = rect.x + rect.width - radius;
-        const y0 = rect.y + radius;
-        const ang = angle_step * @intToFloat(f32, i);
-        const x = x0 + radius * @cos(ang - std.math.pi / 2.0);
-        const y = y0 + radius * @sin(ang - std.math.pi / 2.0);
-        points.appendAssumeCapacity(rl.Vector2.init(x, y));
-    }
-    i = 0;
-    while (i <= steps) : (i += 1) {
-        const x0 = rect.x + rect.width - radius;
-        const y0 = rect.y + rect.height - radius;
-        const ang = angle_step * @intToFloat(f32, i);
-        const x = x0 + radius * @cos(ang);
-        const y = y0 + radius * @sin(ang);
-        points.appendAssumeCapacity(rl.Vector2.init(x, y));
-    }
-    i = 0;
-    while (i <= steps) : (i += 1) {
-        const x0 = rect.x + radius;
-        const y0 = rect.y + rect.height - radius;
-        const ang = angle_step * @intToFloat(f32, i);
-        const x = x0 + radius * @cos(ang + std.math.pi / 2.0);
-        const y = y0 + radius * @sin(ang + std.math.pi / 2.0);
-        points.appendAssumeCapacity(rl.Vector2.init(x, y));
-    }
-    points.appendAssumeCapacity(rl.Vector2.init(rect.x, rect.y + radius));
-
-    rl.DrawLineStrip(points.slice(), color);
 }
