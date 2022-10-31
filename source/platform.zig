@@ -5,7 +5,7 @@ pub const Ui = @import("platform/Ui.zig");
 pub fn main(
     comptime State: type,
     comptime init_function: fn (std.mem.Allocator, *State) void,
-    comptime update_function: fn (*State, *Ui) void,
+    comptime update_function: fn (std.mem.Allocator, *State, *Ui) void,
     comptime cleanup_function: fn (std.mem.Allocator, *State) void,
 ) fn () void {
     return struct {
@@ -23,13 +23,13 @@ pub fn main(
 
             var ui = Ui.init(gpa.allocator());
             defer ui.deinit(gpa.allocator());
-            ui.font = rl.LoadFontEx("c:/windows/fonts/tahoma.ttf", 144, null);
+            ui.font = rl.LoadFontEx("c:/windows/fonts/tahoma.ttf", 24, null);
 
             while (!rl.WindowShouldClose()) {
                 ui.begin();
                 defer ui.end();
 
-                update_function(&state, &ui);
+                update_function(gpa.allocator(), &state, &ui);
             }
         }
     }._main;

@@ -5,16 +5,15 @@ const platform = @import("platform.zig");
 pub const main = platform.main(World, init, update, cleanup);
 
 fn init(allocator: std.mem.Allocator, world: *World) void {
-    const file = get_sample_world_file(allocator) catch |e| {
-        std.debug.print("{any}\n", .{@errorReturnTrace()});
-        std.debug.panic("({!}) Sample project file could not be read.", .{e});
-    };
-    defer toml_free(WorldFile, allocator, file);
-
-    world.* = World.from_file(allocator, file) catch @panic("Out of memory.");
+    load_world_from_file(allocator, world);
 }
 
-fn update(world: *World, ui: *platform.Ui) void {
+fn update(allocator: std.mem.Allocator, world: *World, ui: *platform.Ui) void {
+    if (world.reload_next_frame) {
+        world.deinit(allocator);
+        load_world_from_file(allocator, world);
+    }
+
     if (world.dragging != World.not_dragging) {
         const rl = @import("raylib"); // 🤫
         const dragging = &world.tokens.items[world.dragging];
@@ -33,7 +32,20 @@ fn update(world: *World, ui: *platform.Ui) void {
         if (ui.button(token.name)) {
             world.dragging = @intCast(u32, token_idx);
         }
+        ui.last_inserted.elevation = 1;
     }
+
+    ui.push_parent(ui.layout_positioned(10, 10));
+    if (ui.button("Cargar")) {
+        world.reload_next_frame = true;
+    }
+    _ = ui.block_layout("_padding", .x);
+    ui.last_inserted.semantic_size[0].kind = .pixels;
+    ui.last_inserted.semantic_size[0].value = 16;
+    if (ui.button("Guardar")) {
+        //
+    }
+    ui.pop_parent();
 }
 
 fn cleanup(allocator: std.mem.Allocator, world: *World) void {
@@ -43,6 +55,7 @@ fn cleanup(allocator: std.mem.Allocator, world: *World) void {
 const World = struct {
     tokens: std.ArrayList(Token),
     dragging: u32 = not_dragging,
+    reload_next_frame: bool = false,
 
     const not_dragging = std.math.maxInt(u32);
 
@@ -96,6 +109,16 @@ fn get_sample_world_file(allocator: std.mem.Allocator) !WorldFile {
     const file = try std.fs.cwd().readFileAlloc(allocator, "sample/world.toml", 1 << 30);
     defer allocator.free(file);
     return try toml.parse(WorldFile, allocator, file);
+}
+
+fn load_world_from_file(allocator: std.mem.Allocator, world: *World) void {
+    const file = get_sample_world_file(allocator) catch |e| {
+        std.debug.print("{any}\n", .{@errorReturnTrace()});
+        std.debug.panic("({!}) Sample project file could not be read.", .{e});
+    };
+    defer toml_free(WorldFile, allocator, file);
+
+    world.* = World.from_file(allocator, file) catch @panic("Out of memory.");
 }
 
 test {

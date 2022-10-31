@@ -180,7 +180,6 @@ pub fn button(ui: *Ui, string: [:0]const u8) bool {
     block.semantic_size[@enumToInt(Axis.y)] = Size.init(.text_content, 1, 1);
     block.background_color = 0xfa_fa_fa_ff;
     block.flags.border = true;
-    block.elevation = 1;
 
     const mouse_position = rl.GetMousePosition();
     return rl.CheckCollisionPointRec(mouse_position, block.rect) and rl.IsMouseButtonPressed(rl.MOUSE_BUTTON_LEFT);
@@ -197,7 +196,7 @@ pub fn button(ui: *Ui, string: [:0]const u8) bool {
 // }
 
 pub fn block_layout(ui: *Ui, comptime string: [:0]const u8, axis: Axis) *Block {
-    const block = ui.get_or_insert_block(string);
+    const block = ui.get_or_insert_block(key_from_string(string));
 
     block.semantic_size[@enumToInt(Axis.x)].kind = .children_sum;
     block.semantic_size[@enumToInt(Axis.y)].kind = .children_sum;
