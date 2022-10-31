@@ -35,6 +35,7 @@ const Block = struct {
     semantic_size: [Axis.len]Size,
     layout_axis: Axis = .x,
     background_color: u32 = 0x00_00_00_00,
+    elevation: u8 = 0,
 
     // computed every frame
     computed_rel_position: [Axis.len]f32,
@@ -179,6 +180,7 @@ pub fn button(ui: *Ui, string: [:0]const u8) bool {
     block.semantic_size[@enumToInt(Axis.y)] = Size.init(.text_content, 1, 1);
     block.background_color = 0xfa_fa_fa_ff;
     block.flags.border = true;
+    block.elevation = 1;
 
     const mouse_position = rl.GetMousePosition();
     return rl.CheckCollisionPointRec(mouse_position, block.rect) and rl.IsMouseButtonPressed(rl.MOUSE_BUTTON_LEFT);
@@ -415,11 +417,24 @@ fn render_tree(ui: *Ui, block: *Block) void {
 }
 
 fn render_one_block(ui: *Ui, block: *Block) void {
-    rl.BeginScissorModeRec(block.rect);
-
     const segments = 8;
     const radius = 4.0;
     const roundness = 2.0 * radius / @min(block.rect.width, block.rect.height);
+
+    if (block.elevation > 0) {
+        var shadow_rect = block.rect;
+        shadow_rect.x += 4;
+        shadow_rect.y += 4;
+        const shadow_color = rl.Color.init(0, 0, 0, 0x60);
+
+        if (block.flags.border) {
+            rl.DrawRectangleRounded(shadow_rect, roundness, segments, shadow_color);
+        } else {
+            rl.DrawRectangleRec(shadow_rect, shadow_color);
+        }
+    }
+
+    rl.BeginScissorModeRec(block.rect);
 
     const background_color = rl.Color.init(
         @truncate(u8, block.background_color >> 24),
