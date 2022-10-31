@@ -8,9 +8,10 @@ fn init(allocator: std.mem.Allocator, world: *World) void {
     load_world_from_file(allocator, world);
 }
 
-fn update(allocator: std.mem.Allocator, world: *World, ui: *platform.Ui) void {
+fn update(world: *World, ui: *platform.Ui) void {
     if (world.reload_next_frame) {
-        world.deinit(allocator);
+        const allocator = world.main_allocator;
+        world.deinit();
         load_world_from_file(allocator, world);
     }
 
@@ -48,11 +49,12 @@ fn update(allocator: std.mem.Allocator, world: *World, ui: *platform.Ui) void {
     ui.pop_parent();
 }
 
-fn cleanup(allocator: std.mem.Allocator, world: *World) void {
-    world.deinit(allocator);
+fn cleanup(world: *World) void {
+    world.deinit();
 }
 
 const World = struct {
+    main_allocator: std.mem.Allocator,
     tokens: std.ArrayList(Token),
     dragging: u32 = not_dragging,
     reload_next_frame: bool = false,
@@ -65,11 +67,13 @@ const World = struct {
             tokens.appendAssumeCapacity(try Token.from_file(allocator, token));
         }
         return World{
+            .main_allocator = allocator,
             .tokens = tokens,
         };
     }
 
-    fn deinit(world: *World, allocator: std.mem.Allocator) void {
+    fn deinit(world: *World) void {
+        const allocator = world.main_allocator;
         for (world.tokens.items) |*token| token.deinit(allocator);
         world.tokens.deinit();
         world.* = undefined;

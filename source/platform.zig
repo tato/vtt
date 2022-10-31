@@ -5,8 +5,8 @@ pub const Ui = @import("platform/Ui.zig");
 pub fn main(
     comptime State: type,
     comptime init_function: fn (std.mem.Allocator, *State) void,
-    comptime update_function: fn (std.mem.Allocator, *State, *Ui) void,
-    comptime cleanup_function: fn (std.mem.Allocator, *State) void,
+    comptime update_function: fn (*State, *Ui) void,
+    comptime cleanup_function: fn (*State) void,
 ) fn () void {
     return struct {
         fn _main() void {
@@ -19,7 +19,7 @@ pub fn main(
 
             var state = @as(State, undefined);
             init_function(gpa.allocator(), &state);
-            defer cleanup_function(gpa.allocator(), &state);
+            defer cleanup_function(&state);
 
             var ui = Ui.init(gpa.allocator());
             defer ui.deinit(gpa.allocator());
@@ -29,7 +29,7 @@ pub fn main(
                 ui.begin();
                 defer ui.end();
 
-                update_function(gpa.allocator(), &state, &ui);
+                update_function(&state, &ui);
             }
         }
     }._main;
