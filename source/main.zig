@@ -33,17 +33,19 @@ fn update(world: *World, ui: *platform.Ui) void {
         if (ui.button(token.name)) {
             world.dragging = @intCast(u32, token_idx);
         }
+        ui.last_inserted.semantic_size[0] = .{ .kind = .pixels, .value = 150 };
+        ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 150 };
         ui.last_inserted.elevation = 1;
     }
 
     ui.push_parent(ui.layout_positioned(10, 10));
-    if (ui.button("Cargar")) {
+    if (ui.button("cargar")) {
         world.reload_next_frame = true;
     }
     _ = ui.block_layout("_padding", .x);
     ui.last_inserted.semantic_size[0].kind = .pixels;
     ui.last_inserted.semantic_size[0].value = 16;
-    if (ui.button("Guardar")) {
+    if (ui.button("guardar")) {
         //
     }
     ui.pop_parent();

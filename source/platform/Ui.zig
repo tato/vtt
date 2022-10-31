@@ -82,7 +82,7 @@ const SizeKind = enum {
 pub const Size = struct {
     kind: SizeKind,
     value: f32,
-    strictness: f32,
+    strictness: f32 = 1,
 
     pub fn init(kind: SizeKind, value: f32, strictness: f32) Size {
         std.debug.assert(value >= 0);

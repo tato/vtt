@@ -1,11 +1,11 @@
 [world]
 
 [[tokens]]
-name = "Dars Kirescu"
-details = "Dars Kirescu, Rogue"
+name = "dars kirescu"
+details = "dars kirescu, rogue"
 position = [200, 300]
 
 [[tokens]]
-name = "Liebre"
-details = "Liebre, Warlock"
+name = "liebre"
+details = "liebre, warlock"
 position = [500, 200]

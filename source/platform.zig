@@ -23,7 +23,7 @@ pub fn main(
 
             var ui = Ui.init(gpa.allocator());
             defer ui.deinit(gpa.allocator());
-            ui.font = rl.LoadFontEx("c:/windows/fonts/tahoma.ttf", 24, null);
+            ui.font = rl.LoadFont("c:/windows/fonts/segoeui.ttf");
 
             while (!rl.WindowShouldClose()) {
                 ui.begin();
