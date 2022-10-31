@@ -417,13 +417,21 @@ fn render_tree(ui: *Ui, block: *Block) void {
 fn render_one_block(ui: *Ui, block: *Block) void {
     rl.BeginScissorModeRec(block.rect);
 
+    const segments = 8;
+    const radius = 4.0;
+    const roundness = 2.0 * radius / @min(block.rect.width, block.rect.height);
+
     const background_color = rl.Color.init(
         @truncate(u8, block.background_color >> 24),
         @truncate(u8, block.background_color >> 16),
         @truncate(u8, block.background_color >> 8),
         @truncate(u8, block.background_color),
     );
-    rl.DrawRectangleRec(block.rect, background_color);
+    if (block.flags.border) {
+        rl.DrawRectangleRounded(block.rect, roundness, segments, background_color);
+    } else {
+        rl.DrawRectangleRec(block.rect, background_color);
+    }
 
     if (block.string) |string| {
         const position = rl.Vector2.init(block.rect.x, block.rect.y);
@@ -434,8 +442,7 @@ fn render_one_block(ui: *Ui, block: *Block) void {
 
     if (block.flags.border) {
         const border_color = rl.Color.init(0xec, 0xec, 0xec, 0xff);
-        const radius = 4.0;
-        const roundness = 2.0 * radius / @min(block.rect.width, block.rect.height);
-        rl.DrawRectangleRoundedLines(block.rect, roundness, 8, 2, border_color);
+        const border_thickness = 2;
+        rl.DrawRectangleRoundedLines(block.rect, roundness, segments, border_thickness, border_color);
     }
 }
