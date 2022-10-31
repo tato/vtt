@@ -3,7 +3,9 @@
 [[tokens]]
 name = "Dars"
 details = "Dars Kirescu, Rogue"
+position = [200, 200]
 
 [[tokens]]
 name = "Liebre"
 details = "Liebre, Warlock"
+position = [500, 200]

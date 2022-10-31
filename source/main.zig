@@ -72,6 +72,8 @@ const Token = struct {
         return Token{
             .name = try allocator.dupeZ(u8, file.name),
             .details = try allocator.dupeZ(u8, file.details),
+            .left = @intToFloat(f32, file.position[0]),
+            .top = @intToFloat(f32, file.position[1]),
         };
     }
 
@@ -87,6 +89,7 @@ const WorldFile = struct {
 const TokenFile = struct {
     name: []const u8,
     details: []const u8,
+    position: [2]i64,
 };
 
 fn get_sample_world_file(allocator: std.mem.Allocator) !WorldFile {
