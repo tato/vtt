@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mockup for 5e</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aclonica&family=Arbutus+Slab&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        --border-color: #cccccc;
+        background-color: #f3f3f3;
+        font-family: 'Arbutus Slab', serif;
+        font-size: 24px;
+    }
+
+    .sheet {
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: #fafafa;
+        width: fit-content;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .stat-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        font-size: 1.6rem;
+    }
+
+    .stat-list>h1 {
+        font-size: 1.4rem;
+        font-weight: normal;
+        padding: 0;
+        margin: 0;
+    }
+
+    .stat {
+        /* border: 1px solid var(--border-color); */
+        border-radius: 4px;
+        background-color: #fbfbfb;
+        width: fit-content;
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat>* {
+        padding: 4px;
+    }
+
+    .stat-name {
+        width: 80px;
+        text-align: center;
+    }
+
+    .stat>input[type=number] {
+        display: inline-block;
+        width: 64px;
+        text-align: center;
+    }
+
+    .stat-name {
+        height: 100%;
+    }
+
+    input[type=checkbox] {
+        width: 16px;
+    }
+
+    .buttons {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .buttons>button {
+        font-size: 0.8rem;
+    }
+
+    input,
+    button {
+        font-family: inherit;
+        font-size: inherit;
+    }
+</style>
+
+<div class="sheet">
+    <!-- dars kirescu -->
+    <div class="stat-list">
+        <h1>Abilities & Saving Throws</h1>
+        <div class="stat">
+            <div class="stat-name">STR</div>
+            <input type="checkbox" name="proficient">
+            <input type="number" value="13">
+            <div class="buttons">
+                <button>+1 ability check</button>
+                <button>+1 saving throw</button>
+            </div>
+        </div>
+        <div class="stat">
+            <div class="stat-name">DEX</div>
+            <input type="checkbox" name="proficient" checked>
+            <input type="number" value="18">
+            <div class="buttons">
+                <button>+4 ability check</button>
+                <button>+6 saving throw</button>
+            </div>
+        </div>
+        <div class="stat">
+            <div class="stat-name">CON</div>
+            <input type="checkbox" name="proficient">
+            <input type="number" value="14">
+            <div class="buttons">
+                <button>+2 ability check</button>
+                <button>+2 saving throw</button>
+            </div>
+        </div>
+        <div class="stat">
+            <div class="stat-name">INT</div>
+            <input type="checkbox" name="proficient" checked>
+            <input type="number" value="18">
+            <div class="buttons">
+                <button>+4 ability check</button>
+                <button>+6 saving throw</button>
+            </div>
+        </div>
+        <div class="stat">
+            <div class="stat-name">WIS</div>
+            <input type="checkbox" name="proficient">
+            <input type="number" value="12">
+            <div class="buttons">
+                <button>+1 ability check</button>
+                <button>+1 saving throw</button>
+            </div>
+        </div>
+        <div class="stat">
+            <div class="stat-name">CHA</div>
+            <input type="checkbox" name="proficient">
+            <input type="number" value="15">
+            <div class="buttons">
+                <button>+2 ability check</button>
+                <button>+2 saving throw</button>
+            </div>
+        </div>
+    </div>
+</div>
