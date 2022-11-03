@@ -38,8 +38,8 @@ pub fn read(card: *GenericCard, allocator: std.mem.Allocator, reader: *FileReade
             const icon_uri = reader.readToEndOfLine() orelse return error.stream_too_small;
             card.icon_uri = try allocator.dupe(u8, icon_uri);
         } else if (std.mem.eql(u8, "position", word)) {
-            const x = try reader.nextFloat(f64) orelse return error.stream_too_small;
-            const y = try reader.nextFloat(f64) orelse return error.stream_too_small;
+            const x = try (reader.nextFloat(f64) orelse error.stream_too_small);
+            const y = try (reader.nextFloat(f64) orelse error.stream_too_small);
             card.position = .{ x, y };
         }
     }
