@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub const Universe = @import("universe/Universe.zig");
-const CommonCard = @import("universe/GenericCard.zig");
+const CommonCard = @import("universe/CommonCard.zig");
 const FileReader = @import("universe/FileReader.zig");
 
 pub fn read_from_directory(allocator: std.mem.Allocator, d: std.fs.IterableDir) !Universe {

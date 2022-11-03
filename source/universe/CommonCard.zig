@@ -2,24 +2,25 @@ const std = @import("std");
 
 const FileReader = @import("FileReader.zig");
 
-const GenericCard = @This();
+const CommonCard = @This();
 unique_id: []const u8,
 name: []const u8,
 icon_uri: ?[]const u8,
 position: [2]f64,
+child_tabs: std.ArrayListUnmanaged(usize),
 
-pub fn deinit(card: *GenericCard, allocator: std.mem.Allocator) void {
+pub fn deinit(card: *CommonCard, allocator: std.mem.Allocator) void {
     allocator.free(card.unique_id);
     allocator.free(card.name);
     if (card.icon_uri) |icon_uri| allocator.free(icon_uri);
     card.* = undefined;
 }
 
-pub fn format(card: GenericCard, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+pub fn format(card: CommonCard, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
     _ = fmt;
     _ = options;
     try writer.print(
-        "GenericCard{{\n\tunique_id = \"{s}\",\n\tname = \"{s}\"",
+        "CommonCard{{\n\tunique_id = \"{s}\",\n\tname = \"{s}\"",
         .{ card.unique_id, card.name },
     );
     if (card.icon_uri) |icon_uri| {
@@ -32,7 +33,7 @@ pub fn format(card: GenericCard, comptime fmt: []const u8, options: std.fmt.Form
     try writer.writeAll("\n}}");
 }
 
-pub fn read(card: *GenericCard, allocator: std.mem.Allocator, reader: *FileReader) !void {
+pub fn read(card: *CommonCard, allocator: std.mem.Allocator, reader: *FileReader) !void {
     while (reader.next()) |word| {
         if (std.mem.eql(u8, "icon", word)) {
             const icon_uri = reader.readToEndOfLine() orelse return error.stream_too_small;

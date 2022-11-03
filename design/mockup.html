@@ -12,20 +12,29 @@
 <style>
     body {
         --border-color: #cccccc;
+        --card-background-color: #fafafa;
         background-color: #f3f3f3;
         font-family: 'Arbutus Slab', serif;
         font-size: 24px;
     }
 
-    .sheet {
+    .card {
         padding: 8px;
         border: 1px solid var(--border-color);
         border-radius: 4px;
-        background-color: #fafafa;
+        background-color: var(--card-background-color);
         width: fit-content;
         display: flex;
         flex-direction: column;
         gap: 8px;
+    }
+
+    .card-title {
+        position: relative;
+        top: 0px;
+        left: 0px;
+        height: 0;
+        overflow-y: visible;
     }
 
     .stat-list {
@@ -35,7 +44,7 @@
         font-size: 1.6rem;
     }
 
-    .stat-list>h1 {
+    h1 {
         font-size: 1.4rem;
         font-weight: normal;
         padding: 0;
@@ -45,7 +54,6 @@
     .stat {
         /* border: 1px solid var(--border-color); */
         border-radius: 4px;
-        background-color: #fbfbfb;
         width: fit-content;
         display: flex;
         flex-direction: row;
@@ -91,64 +99,98 @@
         font-family: inherit;
         font-size: inherit;
     }
+
+    .tabs {
+        font-size: 0.8rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 4px;
+        transform: translateY(1px);
+    }
+
+    .tabs>a {
+        border-left: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        padding: 4px;
+    }
+
+    .tabs>.tab-selected {
+        background-color: var(--card-background-color);
+    }
+
+    .tabs-content {
+        border: 1px solid var(--border-color);
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+        padding: 4px;
+    }
 </style>
 
-<div class="sheet">
-    <!-- dars kirescu -->
-    <div class="stat-list">
-        <h1>Abilities & Saving Throws</h1>
-        <div class="stat">
-            <div class="stat-name">STR</div>
-            <input type="checkbox" name="proficient">
-            <input type="number" value="13">
-            <div class="buttons">
-                <button>+1 ability check</button>
-                <button>+1 saving throw</button>
-            </div>
+<div class="card">
+    <h1 class="card-title">Dars Kirescu</h1>
+    <div class="tabs-container">
+        <div class="tabs">
+            <a class="tab-selected" href="">stats</a>
+            <a href="">actions</a>
+            <a href="">spells</a>
         </div>
-        <div class="stat">
-            <div class="stat-name">DEX</div>
-            <input type="checkbox" name="proficient" checked>
-            <input type="number" value="18">
-            <div class="buttons">
-                <button>+4 ability check</button>
-                <button>+6 saving throw</button>
+        <div class="tabs-content stat-list">
+            <div class="stat">
+                <div class="stat-name">STR</div>
+                <input type="checkbox" name="proficient">
+                <input type="number" value="13">
+                <div class="buttons">
+                    <button>+1 ability check</button>
+                    <button>+1 saving throw</button>
+                </div>
             </div>
-        </div>
-        <div class="stat">
-            <div class="stat-name">CON</div>
-            <input type="checkbox" name="proficient">
-            <input type="number" value="14">
-            <div class="buttons">
-                <button>+2 ability check</button>
-                <button>+2 saving throw</button>
+            <div class="stat">
+                <div class="stat-name">DEX</div>
+                <input type="checkbox" name="proficient" checked>
+                <input type="number" value="18">
+                <div class="buttons">
+                    <button>+4 ability check</button>
+                    <button>+6 saving throw</button>
+                </div>
             </div>
-        </div>
-        <div class="stat">
-            <div class="stat-name">INT</div>
-            <input type="checkbox" name="proficient" checked>
-            <input type="number" value="18">
-            <div class="buttons">
-                <button>+4 ability check</button>
-                <button>+6 saving throw</button>
+            <div class="stat">
+                <div class="stat-name">CON</div>
+                <input type="checkbox" name="proficient">
+                <input type="number" value="14">
+                <div class="buttons">
+                    <button>+2 ability check</button>
+                    <button>+2 saving throw</button>
+                </div>
             </div>
-        </div>
-        <div class="stat">
-            <div class="stat-name">WIS</div>
-            <input type="checkbox" name="proficient">
-            <input type="number" value="12">
-            <div class="buttons">
-                <button>+1 ability check</button>
-                <button>+1 saving throw</button>
+            <div class="stat">
+                <div class="stat-name">INT</div>
+                <input type="checkbox" name="proficient" checked>
+                <input type="number" value="18">
+                <div class="buttons">
+                    <button>+4 ability check</button>
+                    <button>+6 saving throw</button>
+                </div>
             </div>
-        </div>
-        <div class="stat">
-            <div class="stat-name">CHA</div>
-            <input type="checkbox" name="proficient">
-            <input type="number" value="15">
-            <div class="buttons">
-                <button>+2 ability check</button>
-                <button>+2 saving throw</button>
+            <div class="stat">
+                <div class="stat-name">WIS</div>
+                <input type="checkbox" name="proficient">
+                <input type="number" value="12">
+                <div class="buttons">
+                    <button>+1 ability check</button>
+                    <button>+1 saving throw</button>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">CHA</div>
+                <input type="checkbox" name="proficient">
+                <input type="number" value="15">
+                <div class="buttons">
+                    <button>+2 ability check</button>
+                    <button>+2 saving throw</button>
+                </div>
             </div>
         </div>
     </div>
