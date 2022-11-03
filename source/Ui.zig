@@ -99,7 +99,7 @@ const Axis = enum {
 const Key = u64;
 
 pub fn init(gpa: std.mem.Allocator) Ui {
-    const primordial_parent = gpa.create(Block) catch unreachable;
+    const primordial_parent = gpa.create(Block) catch @panic("Out of memory.");
     primordial_parent.* = std.mem.zeroes(Block);
     return .{
         .gpa = gpa,
@@ -121,9 +121,10 @@ pub fn deinit(ui: *Ui, allocator: std.mem.Allocator) void {
 }
 
 pub fn begin(ui: *Ui) void {
-    ui.arena = std.heap.ArenaAllocator.init(ui.gpa);
     ui.frame_index += 1;
     ui.current_parent = ui.primordial_parent;
+
+    ui.arena = std.heap.ArenaAllocator.init(ui.gpa);
 
     ui.primordial_parent.clear_per_frame_info();
     const semantic_size = Size{ .kind = .percent_of_parent, .value = 1, .strictness = 1 };
@@ -148,7 +149,7 @@ pub fn end(ui: *Ui) void {
 
     rl.EndDrawing();
 
-    ui.prune_widgets() catch unreachable;
+    ui.prune_widgets();
 
     ui.arena.deinit();
 }
@@ -161,20 +162,18 @@ pub fn pop_parent(ui: *Ui) void {
     ui.current_parent = ui.current_parent.parent.?;
 }
 
-// TODO: right now we take the string pointer and don't dupe. this is risky.
 pub fn label(ui: *Ui, string: [:0]const u8) void {
     const block = ui.get_or_insert_block(key_from_string(string));
 
-    block.string = string;
+    block.string = ui.arena.allocator().dupeZ(u8, string) catch string;
     block.semantic_size[@enumToInt(Axis.x)].kind = .text_content;
     block.semantic_size[@enumToInt(Axis.y)].kind = .text_content;
 }
 
-// TODO: right now we take the string pointer and don't dupe. this is risky.
 pub fn button(ui: *Ui, string: [:0]const u8) bool {
     const block = ui.get_or_insert_block(key_from_string(string));
 
-    block.string = string;
+    block.string = ui.arena.allocator().dupeZ(u8, string) catch string;
     block.semantic_size[@enumToInt(Axis.x)] = Size.init(.text_content, 1, 1);
     block.semantic_size[@enumToInt(Axis.y)] = Size.init(.text_content, 1, 1);
     block.background_color = 0xfa_fa_fa_ff;
@@ -183,16 +182,6 @@ pub fn button(ui: *Ui, string: [:0]const u8) bool {
     const mouse_position = rl.GetMousePosition();
     return rl.CheckCollisionPointRec(mouse_position, block.rect) and rl.IsMouseButtonPressed(rl.MOUSE_BUTTON_LEFT);
 }
-
-// TODO
-// pub fn withBorder() void {
-//     ui.last_inserted.flags.border = true;
-// }
-
-// TODO
-// pub fn withSize(x: Size, y: Size) void {
-//     ui.last_inserted.semantic_size = .{ x, y };
-// }
 
 pub fn block_layout(ui: *Ui, comptime string: [:0]const u8, axis: Axis) *Block {
     const block = ui.get_or_insert_block(key_from_string(string));
@@ -218,9 +207,9 @@ pub fn layout_positioned(ui: *Ui, left: f32, top: f32) *Block {
 }
 
 fn get_or_insert_block(ui: *Ui, key: Key) *Block {
-    const entry = ui.blocks.getOrPut(ui.gpa, key) catch unreachable;
+    const entry = ui.blocks.getOrPut(ui.gpa, key) catch @panic("Out of memory.");
     if (!entry.found_existing) {
-        const block = ui.gpa.create(Block) catch unreachable;
+        const block = ui.gpa.create(Block) catch @panic("Out of memory.");
         block.* = std.mem.zeroInit(Block, .{
             .key = key,
         });
@@ -244,7 +233,7 @@ fn get_or_insert_block(ui: *Ui, key: Key) *Block {
     return block;
 }
 
-fn prune_widgets(ui: *Ui) !void {
+fn prune_widgets(ui: *Ui) void {
     var remove_blocks = std.ArrayList(Key).init(ui.arena.allocator());
     defer remove_blocks.deinit();
 
@@ -252,7 +241,10 @@ fn prune_widgets(ui: *Ui) !void {
     while (blocks_iterator.next()) |entry| {
         if (entry.value_ptr.*.last_frame_touched_index < ui.frame_index) {
             ui.gpa.destroy(entry.value_ptr.*);
-            try remove_blocks.append(entry.key_ptr.*);
+            remove_blocks.append(entry.key_ptr.*) catch {
+                std.log.warn("prune_widgets: Out of memory.", .{});
+                break;
+            };
         }
     }
 
