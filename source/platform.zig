@@ -1,6 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-pub const Ui = @import("platform/Ui.zig");
+const Ui = @import("Ui.zig");
 
 pub fn main(
     comptime State: type,

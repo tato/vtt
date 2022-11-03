@@ -1,6 +1,7 @@
 const std = @import("std");
 const toml = @import("toml");
 const platform = @import("platform.zig");
+const Ui = @import("Ui.zig");
 
 pub const main = platform.main(World, init, update, cleanup);
 
@@ -8,7 +9,7 @@ fn init(allocator: std.mem.Allocator, world: *World) void {
     load_world_from_file(allocator, world);
 }
 
-fn update(world: *World, ui: *platform.Ui) void {
+fn update(world: *World, ui: *Ui) void {
     if (world.reload_next_frame) {
         const allocator = world.main_allocator;
         world.deinit();
@@ -37,6 +38,7 @@ fn update(world: *World, ui: *platform.Ui) void {
         ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 150 };
         ui.last_inserted.elevation = 1;
     }
+    draw_funny(world, ui);
 
     ui.push_parent(ui.layout_positioned(10, 10));
     if (ui.button("cargar")) {
@@ -125,6 +127,16 @@ fn load_world_from_file(allocator: std.mem.Allocator, world: *World) void {
     defer toml_free(WorldFile, allocator, file);
 
     world.* = World.from_file(allocator, file) catch @panic("Out of memory.");
+}
+
+fn draw_funny(world: *World, ui: *Ui) void {
+    if (ui.button("funny")) {
+        _ = world;
+        // world.dragging = @intCast(u32, token_idx);
+    }
+    ui.last_inserted.semantic_size[0] = .{ .kind = .pixels, .value = 400 };
+    ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 300 };
+    ui.last_inserted.elevation = 1;
 }
 
 test {

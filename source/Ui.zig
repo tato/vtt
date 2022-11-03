@@ -2,7 +2,6 @@ const std = @import("std");
 const rl = @import("raylib");
 
 const Ui = @This();
-
 gpa: std.mem.Allocator,
 arena: std.heap.ArenaAllocator,
 
