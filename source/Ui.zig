@@ -14,7 +14,7 @@ last_inserted: *Block,
 
 font: rl.Font,
 
-const BlockMap = std.AutoHashMapUnmanaged(Key, *Block);
+const BlockMap = std.HashMapUnmanaged(Key, *Block, KeyHashContext, 80);
 
 const Block = struct {
     // tree links
@@ -96,8 +96,6 @@ const Axis = enum {
     const len = @typeInfo(Axis).Enum.fields.len;
 };
 
-const Key = u64;
-
 pub fn init(gpa: std.mem.Allocator) Ui {
     const primordial_parent = gpa.create(Block) catch @panic("Out of memory.");
     primordial_parent.* = std.mem.zeroes(Block);
@@ -162,7 +160,7 @@ pub fn pop_parent(ui: *Ui) void {
     ui.current_parent = ui.current_parent.parent.?;
 }
 
-pub fn label(ui: *Ui, string: [:0]const u8) void {
+pub fn do_label(ui: *Ui, string: []const u8) void {
     const block = ui.get_or_insert_block(key_from_string(string));
 
     block.string = ui.arena.allocator().dupeZ(u8, string) catch string;
@@ -170,7 +168,7 @@ pub fn label(ui: *Ui, string: [:0]const u8) void {
     block.semantic_size[@enumToInt(Axis.y)].kind = .text_content;
 }
 
-pub fn button(ui: *Ui, string: [:0]const u8) bool {
+pub fn do_button(ui: *Ui, string: [:0]const u8) bool {
     const block = ui.get_or_insert_block(key_from_string(string));
 
     block.string = ui.arena.allocator().dupeZ(u8, string) catch string;
@@ -251,10 +249,54 @@ fn prune_widgets(ui: *Ui) void {
     for (remove_blocks.items) |key| _ = ui.blocks.remove(key);
 }
 
-fn key_from_string(string: []const u8) Key {
-    return std.hash.Wyhash.hash(420, string);
-}
+const BlockLabel = struct {
+    key_part: []const u8,
+    label_part: []const u8,
 
+    fn parse(string: []const u8) BlockLabel {
+        var result = BlockLabel{
+            .key_part = string,
+            .label_part = string,
+        };
+
+        var i = std.mem.split(u8, string, "###");
+        const first = i.next().?;
+        if (first.len != string.len) {
+            result.key_part = first;
+            result.label_part = i.next().?;
+            std.debug.assert(i.next() == null);
+            return result;
+        }
+
+        if (std.mem.indexOf(u8, string, "##")) |index| {
+            result.label_part = string[0..index];
+        }
+        return result;
+    }
+};
+
+const Key = struct {
+    string: []const u8,
+    hash: u64,
+
+    fn init(string: []const u8) Key {
+        return .{
+            .string = string,
+            .key = std.hash.Wyhash.hash(413, string),
+        };
+    }
+};
+
+const KeyHashContext = struct {
+    fn hash(_: KeyHashContext, key: Key) u64 {
+        return key.hash;
+    }
+    fn eql(_: KeyHashContext, a: Key, b: Key) bool {
+        return a.hash == b.hash and std.mem.eql(u8, a.string, b.string);
+    }
+};
+
+// TODO: get rid of this
 var global_random = @as(std.rand.DefaultPrng, undefined);
 var init_global_random = std.once(struct {
     fn _init_global_random() void {
