@@ -6,6 +6,8 @@ const Universe = @This();
 allocator: std.mem.Allocator,
 cards: std.ArrayListUnmanaged(CommonCard),
 
+pub const CardIndex = usize;
+
 pub fn deinit(uni: *Universe) void {
     for (uni.cards.items) |*card|
         card.deinit(uni.allocator);
