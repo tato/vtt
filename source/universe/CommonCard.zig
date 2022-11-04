@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const Universe = @import("Universe.zig");
+const types = @import("types.zig");
 const FileReader = @import("FileReader.zig");
 
 const CommonCard = @This();
@@ -8,7 +8,7 @@ unique_id: []const u8,
 name: []const u8,
 icon_uri: ?[]const u8,
 position: [2]f64,
-child_tabs: std.ArrayListUnmanaged(Universe.CardIndex),
+child_tabs: std.ArrayListUnmanaged(types.CardIndex),
 
 pub fn deinit(card: *CommonCard, allocator: std.mem.Allocator) void {
     allocator.free(card.unique_id);
@@ -44,14 +44,24 @@ pub fn format(card: CommonCard, comptime fmt: []const u8, options: std.fmt.Forma
 }
 
 pub fn read(card: *CommonCard, allocator: std.mem.Allocator, reader: *FileReader) !void {
+    const FieldMap = types.StringEnumMap(enum { icon, position });
+
     while (reader.next()) |word| {
-        if (std.mem.eql(u8, "icon", word)) {
-            const icon_uri = reader.readToEndOfLine() orelse return error.stream_too_small;
-            card.icon_uri = try allocator.dupe(u8, icon_uri);
-        } else if (std.mem.eql(u8, "position", word)) {
-            const x = try (reader.nextFloat(f64) orelse error.stream_too_small);
-            const y = try (reader.nextFloat(f64) orelse error.stream_too_small);
-            card.position = .{ x, y };
+        const field = FieldMap.get(word) orelse {
+            _ = reader.readToEndOfLine();
+            continue;
+        };
+
+        switch (field) {
+            .icon => {
+                const icon_uri = reader.readToEndOfLine() orelse return error.stream_too_small;
+                card.icon_uri = try allocator.dupe(u8, icon_uri);
+            },
+            .position => {
+                const x = try (reader.nextFloat(f64) orelse error.stream_too_small);
+                const y = try (reader.nextFloat(f64) orelse error.stream_too_small);
+                card.position = .{ x, y };
+            },
         }
     }
 }

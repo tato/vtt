@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const types = @import("universe/types.zig");
 pub const Universe = @import("universe/Universe.zig");
 const CommonCard = @import("universe/CommonCard.zig");
 const FileReader = @import("universe/FileReader.zig");
@@ -9,7 +10,7 @@ pub fn read_from_directory(allocator: std.mem.Allocator, d: std.fs.IterableDir) 
     defer walker.deinit();
 
     var cards = std.ArrayList(CommonCard).init(allocator);
-    var card_parents = std.AutoHashMap(Universe.CardIndex, []const u8).init(allocator);
+    var card_parents = std.AutoHashMap(types.CardIndex, []const u8).init(allocator);
     defer {
         var i = card_parents.valueIterator();
         while (i.next()) |value| allocator.free(value.*);
