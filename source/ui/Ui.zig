@@ -115,8 +115,11 @@ pub fn init(gpa: std.mem.Allocator) Ui {
 pub fn deinit(ui: *Ui, allocator: std.mem.Allocator) void {
     std.debug.assert(allocator.ptr == ui.gpa.ptr);
     ui.gpa.destroy(ui.primordial_parent);
-    var i = ui.blocks.valueIterator();
-    while (i.next()) |block| ui.gpa.destroy(block.*);
+    var i = ui.blocks.iterator();
+    while (i.next()) |entry| {
+        ui.gpa.free(entry.key_ptr.string);
+        ui.gpa.destroy(entry.value_ptr.*);
+    }
     ui.blocks.deinit(ui.gpa);
     ui.* = undefined;
 }
@@ -245,6 +248,7 @@ fn prune_widgets(ui: *Ui) void {
     var blocks_iterator = ui.blocks.iterator();
     while (blocks_iterator.next()) |entry| {
         if (entry.value_ptr.*.last_frame_touched_index < ui.frame_index) {
+            ui.gpa.free(entry.key_ptr.string);
             ui.gpa.destroy(entry.value_ptr.*);
             remove_blocks.append(entry.key_ptr.*) catch {
                 std.log.warn("prune_widgets: Out of memory.", .{});

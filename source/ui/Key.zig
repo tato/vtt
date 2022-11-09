@@ -4,13 +4,6 @@ const Key = @This();
 string: []const u8,
 hash: u64,
 
-pub fn init(string: []const u8) Key {
-    return .{
-        .string = string,
-        .hash = std.hash.Wyhash.hash(413, string),
-    };
-}
-
 pub fn dupe(allocator: std.mem.Allocator, string: []const u8) !Key {
     return .{
         .string = try allocator.dupe(u8, string),
