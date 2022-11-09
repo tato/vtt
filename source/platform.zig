@@ -1,5 +1,5 @@
 const std = @import("std");
-const rl = @import("raylib");
+pub const rl = @import("raylib");
 const Ui = @import("ui.zig").Ui;
 
 pub fn main(
@@ -33,4 +33,12 @@ pub fn main(
             }
         }
     }._main;
+}
+
+pub fn get_screen_width(comptime T: type) T {
+    return std.math.lossyCast(T, rl.GetScreenWidth());
+}
+
+pub fn get_screen_height(comptime T: type) T {
+    return std.math.lossyCast(T, rl.GetScreenHeight());
 }
