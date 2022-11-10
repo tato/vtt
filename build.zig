@@ -1,5 +1,25 @@
 const std = @import("std");
 
+const raylib = @import("packages/raylib/build.zig");
+
+const packages = struct {
+    const platform = std.build.Pkg{
+        .name = "platform",
+        .source = .{ .path = "source/platform/_.zig" },
+        .dependencies = &.{raylib.raylib_pkg},
+    };
+    const ui = std.build.Pkg{
+        .name = "ui",
+        .source = .{ .path = "source/ui/_.zig" },
+        .dependencies = &.{platform},
+    };
+    const cosmos = std.build.Pkg{
+        .name = "cosmos",
+        .source = .{ .path = "source/cosmos/_.zig" },
+        .dependencies = &.{},
+    };
+};
+
 pub fn build(b: *std.build.Builder) void {
     const target = b.standardTargetOptions(.{});
     const mode = b.standardReleaseOptions();
@@ -15,11 +35,11 @@ pub fn build(b: *std.build.Builder) void {
     inline for (.{ exe, exe_tests }) |goal| {
         goal.setTarget(target);
         goal.setBuildMode(mode);
-        // goal.addPackagePath("toml", "packages/sometoml/toml.zig");
-        goal.addPackagePath("toml", "packages/toml-zig/src/value.zig");
 
-        const raylib = @import("packages/raylib/build.zig");
-        goal.addPackage(raylib.raylib_pkg);
+        goal.addPackage(packages.platform);
+        goal.addPackage(packages.ui);
+        goal.addPackage(packages.cosmos);
+
         goal.linkLibrary(raylib.getRaylib(b, mode, target));
     }
 

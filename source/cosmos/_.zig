@@ -1,12 +1,11 @@
 const std = @import("std");
 
-const types = @import("universe/types.zig");
-// TODO: cosmos
-pub const Universe = @import("universe/Universe.zig");
-const CommonCard = @import("universe/CommonCard.zig");
-const FileReader = @import("universe/FileReader.zig");
+const types = @import("types.zig");
+pub const Cosmos = @import("Cosmos.zig");
+const CommonCard = @import("CommonCard.zig");
+const FileReader = @import("FileReader.zig");
 
-pub fn read_from_directory(allocator: std.mem.Allocator, d: std.fs.IterableDir) !Universe {
+pub fn read_from_directory(allocator: std.mem.Allocator, d: std.fs.IterableDir) !Cosmos {
     var walker = try d.walk(allocator);
     defer walker.deinit();
 
@@ -62,7 +61,7 @@ pub fn read_from_directory(allocator: std.mem.Allocator, d: std.fs.IterableDir) 
         } else std.debug.panic("The parent id [{s}] is not present.", .{entry.value_ptr.*});
     }
 
-    return Universe{
+    return Cosmos{
         .allocator = allocator,
         .cards = cards.moveToUnmanaged(),
     };
@@ -72,11 +71,11 @@ test read_from_directory {
     var d = try std.fs.cwd().openIterableDir("sample", .{});
     defer d.close();
 
-    var uni = try read_from_directory(std.testing.allocator, d);
-    defer uni.deinit();
+    var cosmos = try read_from_directory(std.testing.allocator, d);
+    defer cosmos.deinit();
 
-    std.debug.print("{d} items\n", .{uni.cards.items.len});
-    for (uni.cards.items) |card| std.debug.print("{any}\n", .{card});
+    std.debug.print("{d} items\n", .{cosmos.cards.items.len});
+    for (cosmos.cards.items) |card| std.debug.print("{any}\n", .{card});
 }
 
 fn get_card_kind(reader: *FileReader) ?[]const u8 {

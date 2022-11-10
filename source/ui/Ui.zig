@@ -1,5 +1,5 @@
 const std = @import("std");
-const platform = @import("../platform.zig");
+const platform = @import("platform");
 
 const BlockLabel = @import("BlockLabel.zig");
 

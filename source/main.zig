@@ -1,60 +1,59 @@
 const std = @import("std");
-const toml = @import("toml");
-const platform = @import("platform.zig");
-const uni = @import("universe.zig");
-const Ui = @import("ui.zig").Ui;
+const cosmos = @import("cosmos");
+const platform = @import("platform");
+const Ui = @import("ui").Ui;
 
-pub const main = platform.main(World, init, update, cleanup);
+pub const main = platform.main(App, init, update, cleanup);
 
-fn init(allocator: std.mem.Allocator, world: *World) void {
-    world.ui = allocator.create(Ui) catch @panic("out of memory");
-    world.ui.* = Ui.init(allocator);
-    defer world.ui.deinit(allocator);
-    world.ui.font = platform.rl.LoadFont("c:/windows/fonts/segoeui.ttf");
+fn init(allocator: std.mem.Allocator, app: *App) void {
+    app.ui = allocator.create(Ui) catch @panic("out of memory");
+    app.ui.* = Ui.init(allocator);
+    defer app.ui.deinit(allocator);
+    app.ui.font = platform.rl.LoadFont("c:/windows/fonts/segoeui.ttf");
 
-    load_world_from_file(allocator, world);
+    load_world_from_file(allocator, app);
 }
 
-fn update(world: *World) void {
-    const ui = world.ui;
+fn update(app: *App) void {
+    const ui = app.ui;
 
     ui.begin();
     defer ui.end();
 
-    if (world.reload_next_frame) {
-        const allocator = world.main_allocator;
-        world.deinit();
-        load_world_from_file(allocator, world);
+    if (app.reload_next_frame) {
+        const allocator = app.main_allocator;
+        app.deinit();
+        load_world_from_file(allocator, app);
     }
 
-    // if (world.dragging != World.not_dragging) {
+    // if (app.dragging != App.not_dragging) {
     //     const rl = @import("raylib"); // 🤫
-    //     const dragging = &world.tokens.items[world.dragging];
+    //     const dragging = &app.tokens.items[app.dragging];
     //     dragging.left += rl.GetMouseDelta().x;
     //     dragging.top += rl.GetMouseDelta().y;
 
     //     if (rl.IsMouseButtonUp(rl.MOUSE_BUTTON_LEFT)) {
-    //         world.dragging = World.not_dragging;
+    //         app.dragging = App.not_dragging;
     //     }
     // }
 
-    for (world.universe.cards.items) |card, card_idx| {
+    for (app.cosmos.cards.items) |card, card_idx| {
         // std.debug.print("hehe [{d:.2}, {d:.2}]\n", .{ card.position[0], card.position[1] });
         ui.push_parent(ui.layout_positioned("", @floatCast(f32, card.position[0]), @floatCast(f32, card.position[1])));
         defer ui.pop_parent();
 
         if (ui.do_button(card.name)) {
-            world.dragging = @intCast(u32, card_idx);
+            app.dragging = @intCast(u32, card_idx);
         }
         ui.last_inserted.semantic_size[0] = .{ .kind = .pixels, .value = 150 };
         ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 150 };
         ui.last_inserted.elevation = 1;
     }
-    draw_funny(world, ui);
+    draw_funny(app, ui);
 
     ui.push_parent(ui.layout_positioned("", 10, 10));
     if (ui.do_button("cargar")) {
-        world.reload_next_frame = true;
+        app.reload_next_frame = true;
     }
     _ = ui.block_layout("_padding", .x);
     ui.last_inserted.semantic_size[0].kind = .pixels;
@@ -65,22 +64,22 @@ fn update(world: *World) void {
     ui.pop_parent();
 }
 
-fn cleanup(world: *World) void {
-    world.deinit();
+fn cleanup(app: *App) void {
+    app.deinit();
 }
 
-const World = struct {
+const App = struct {
     main_allocator: std.mem.Allocator,
     ui: *Ui,
     dragging: u32 = not_dragging,
     reload_next_frame: bool = false,
-    universe: uni.Universe,
+    cosmos: cosmos.Cosmos,
 
     const not_dragging = std.math.maxInt(u32);
 
-    fn deinit(world: *World) void {
-        world.universe.deinit();
-        world.* = undefined;
+    fn deinit(app: *App) void {
+        app.cosmos.deinit();
+        app.* = undefined;
     }
 };
 
@@ -114,22 +113,22 @@ const World = struct {
 //     position: [2]i64,
 // };
 
-fn load_world_from_file(allocator: std.mem.Allocator, world: *World) void {
-    const ui = world.ui;
-    world.* = .{
+fn load_world_from_file(allocator: std.mem.Allocator, app: *App) void {
+    const ui = app.ui;
+    app.* = .{
         .main_allocator = allocator,
-        .universe = undefined,
+        .cosmos = undefined,
         .ui = ui,
     };
 
     const d = std.fs.cwd().openIterableDir("sample", .{}) catch @panic("Can't open directory.");
-    world.universe = uni.read_from_directory(allocator, d) catch @panic("Something happened.");
+    app.cosmos = cosmos.read_from_directory(allocator, d) catch @panic("Something happened.");
 }
 
-fn draw_funny(world: *World, ui: *Ui) void {
+fn draw_funny(app: *App, ui: *Ui) void {
     if (ui.do_button("funny")) {
-        _ = world;
-        // world.dragging = @intCast(u32, token_idx);
+        _ = app;
+        // app.dragging = @intCast(u32, token_idx);
     }
     ui.last_inserted.semantic_size[0] = .{ .kind = .pixels, .value = 400 };
     ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 300 };
