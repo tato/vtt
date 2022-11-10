@@ -219,7 +219,7 @@ pub fn block_layout(ui: *Ui, comptime string: [:0]const u8, axis: Axis) *Block {
 
 pub fn layout_positioned(ui: *Ui, comptime string: [:0]const u8, left: f32, top: f32) *Block {
     const label = BlockLabel.parse(string);
-    const block = ui.get_or_insert_block(Key.dupe(ui.gpa, label.key_part) catch @panic("Out of memory."));
+    const block = ui.get_or_insert_block(Key.hash(label.key_part));
     block.flags.positioned = true;
 
     block.semantic_size[@enumToInt(Axis.x)].kind = .children_sum;

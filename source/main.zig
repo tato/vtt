@@ -7,10 +7,20 @@ const Ui = @import("ui.zig").Ui;
 pub const main = platform.main(World, init, update, cleanup);
 
 fn init(allocator: std.mem.Allocator, world: *World) void {
+    world.ui = allocator.create(Ui) catch @panic("out of memory");
+    world.ui.* = Ui.init(allocator);
+    defer world.ui.deinit(allocator);
+    world.ui.font = platform.rl.LoadFont("c:/windows/fonts/segoeui.ttf");
+
     load_world_from_file(allocator, world);
 }
 
-fn update(world: *World, ui: *Ui) void {
+fn update(world: *World) void {
+    const ui = world.ui;
+
+    ui.begin();
+    defer ui.end();
+
     if (world.reload_next_frame) {
         const allocator = world.main_allocator;
         world.deinit();
@@ -30,8 +40,8 @@ fn update(world: *World, ui: *Ui) void {
 
     for (world.universe.cards.items) |card, card_idx| {
         // std.debug.print("hehe [{d:.2}, {d:.2}]\n", .{ card.position[0], card.position[1] });
-        // ui.push_parent(ui.layout_positioned("", @floatCast(f32, card.position[0]), @floatCast(f32, card.position[1])));
-        // defer ui.pop_parent();
+        ui.push_parent(ui.layout_positioned("", @floatCast(f32, card.position[0]), @floatCast(f32, card.position[1])));
+        defer ui.pop_parent();
 
         if (ui.do_button(card.name)) {
             world.dragging = @intCast(u32, card_idx);
@@ -40,19 +50,19 @@ fn update(world: *World, ui: *Ui) void {
         ui.last_inserted.semantic_size[1] = .{ .kind = .pixels, .value = 150 };
         ui.last_inserted.elevation = 1;
     }
-    // draw_funny(world, ui);
+    draw_funny(world, ui);
 
-    // ui.push_parent(ui.layout_positioned("", 10, 10));
-    // if (ui.do_button("cargar")) {
-    //     world.reload_next_frame = true;
-    // }
-    // _ = ui.block_layout("_padding", .x);
-    // ui.last_inserted.semantic_size[0].kind = .pixels;
-    // ui.last_inserted.semantic_size[0].value = 16;
-    // if (ui.do_button("guardar")) {
-    //     //
-    // }
-    // ui.pop_parent();
+    ui.push_parent(ui.layout_positioned("", 10, 10));
+    if (ui.do_button("cargar")) {
+        world.reload_next_frame = true;
+    }
+    _ = ui.block_layout("_padding", .x);
+    ui.last_inserted.semantic_size[0].kind = .pixels;
+    ui.last_inserted.semantic_size[0].value = 16;
+    if (ui.do_button("guardar")) {
+        //
+    }
+    ui.pop_parent();
 }
 
 fn cleanup(world: *World) void {
@@ -61,6 +71,7 @@ fn cleanup(world: *World) void {
 
 const World = struct {
     main_allocator: std.mem.Allocator,
+    ui: *Ui,
     dragging: u32 = not_dragging,
     reload_next_frame: bool = false,
     universe: uni.Universe,
@@ -104,9 +115,11 @@ const World = struct {
 // };
 
 fn load_world_from_file(allocator: std.mem.Allocator, world: *World) void {
+    const ui = world.ui;
     world.* = .{
         .main_allocator = allocator,
         .universe = undefined,
+        .ui = ui,
     };
 
     const d = std.fs.cwd().openIterableDir("sample", .{}) catch @panic("Can't open directory.");

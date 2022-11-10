@@ -1,11 +1,10 @@
 const std = @import("std");
 pub const rl = @import("raylib");
-const Ui = @import("ui.zig").Ui;
 
 pub fn main(
     comptime State: type,
     comptime init_function: fn (std.mem.Allocator, *State) void,
-    comptime update_function: fn (*State, *Ui) void,
+    comptime update_function: fn (*State) void,
     comptime cleanup_function: fn (*State) void,
 ) fn () void {
     return struct {
@@ -21,15 +20,8 @@ pub fn main(
             init_function(gpa.allocator(), &state);
             defer cleanup_function(&state);
 
-            var ui = Ui.init(gpa.allocator());
-            defer ui.deinit(gpa.allocator());
-            ui.font = rl.LoadFont("c:/windows/fonts/segoeui.ttf");
-
             while (!rl.WindowShouldClose()) {
-                ui.begin();
-                defer ui.end();
-
-                update_function(&state, &ui);
+                update_function(&state);
             }
         }
     }._main;
