@@ -63,10 +63,9 @@ const Block = struct {
     }
 };
 
-const BlockFlags = packed struct(u32) {
+const BlockFlags = packed struct {
     border: bool = false,
     positioned: bool = false,
-    _unused: u30 = 0,
 };
 
 const Rect = extern struct {
@@ -128,8 +127,7 @@ pub fn init(gpa: std.mem.Allocator) Ui {
     };
 }
 
-pub fn deinit(ui: *Ui, allocator: std.mem.Allocator) void {
-    std.debug.assert(allocator.ptr == ui.gpa.ptr);
+pub fn deinit(ui: *Ui) void {
     ui.gpa.destroy(ui.primordial_parent);
     var i = ui.blocks.iterator();
     while (i.next()) |entry| {
@@ -182,7 +180,7 @@ pub fn pop_parent(ui: *Ui) void {
     ui.current_parent = ui.current_parent.parent.?;
 }
 
-pub fn do_label(ui: *Ui, string: []const u8) void {
+pub fn paint_label(ui: *Ui, string: []const u8) void {
     const label = BlockLabel.parse(string);
     const block = ui.get_or_insert_block(Key.hash(label.key_part));
 
@@ -191,7 +189,7 @@ pub fn do_label(ui: *Ui, string: []const u8) void {
     block.semantic_size[@enumToInt(Axis.y)].kind = .text_content;
 }
 
-pub fn do_button(ui: *Ui, string: []const u8) bool {
+pub fn paint_button(ui: *Ui, string: []const u8) bool {
     const label = BlockLabel.parse(string);
     const block = ui.get_or_insert_block(Key.hash(label.key_part));
 
@@ -204,6 +202,11 @@ pub fn do_button(ui: *Ui, string: []const u8) bool {
     const rl = platform.rl;
     const mouse_position = rl.GetMousePosition();
     return rl.CheckCollisionPointRec(mouse_position, @bitCast(rl.Rectangle, block.rect)) and rl.IsMouseButtonPressed(rl.MOUSE_BUTTON_LEFT);
+}
+
+pub fn paint_text_input(ui: *Ui, buffer: []u8) []const u8 {
+    _ = ui;
+    _ = buffer;
 }
 
 pub fn block_layout(ui: *Ui, comptime string: [:0]const u8, axis: Axis) *Block {
